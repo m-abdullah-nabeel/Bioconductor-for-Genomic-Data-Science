@@ -1,0 +1,346 @@
+---
+title: "Quiz 1"
+author: "Muhammad Abdullah Nabeel"
+date: "7/6/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Quiz 1
+
+Useful links before we start:
+
+-   [https://www.coursera.org/learn/bioconductor/discussions/forums/ux-4Iij3Eea8jw6UvTi2Tw/threads/YLZyg9f_EeW17wrgkMLDIQhttps://www.coursera.org/learn/bioconductor/discussions/forums/ux-4Iij3Eea8jw6UvTi2Tw/threads/YLZyg9f_EeW17wrgkMLDIQ](https://www.coursera.org/learn/bioconductor/discussions/forums/ux-4Iij3Eea8jw6UvTi2Tw/threads/YLZyg9f_EeW17wrgkMLDIQ){.uri}
+
+-   [Bioconductor for Genomic Data Science - Discussions \| Coursera](https://www.coursera.org/learn/bioconductor/discussions/forums/ux-4Iij3Eea8jw6UvTi2Tw/threads/JW10d3MTRd6tdHdzE_Xe0Q)
+
+## Q1
+
+session direcory
+
+```{r}
+# BiocManager::version()
+# BiocManager::install("AnnotationHub")
+# BiocManager::install("GenomicRanges")
+library("AnnotationHub")
+library(GenomicRanges)
+
+ah = AnnotationHub()
+ah
+
+ha = subset(ah, species == "Homo sapiens")
+
+ha
+
+q1_data = query(ha, "CpG Islands")
+
+q1_data
+
+q1_datum = q1_data[[1]]
+q1_datum
+
+# we have right data
+# now check how many ranges are on autosomes
+# autosomes are chromosomes other than sex chromosome
+# removing non-standad chromosomes/contigs
+
+q1_std_chr = keepStandardChromosomes(q1_datum, pruning.mode = "coarse")
+
+
+q1_std_chr
+seqlevels(q1_std_chr)
+
+q1_autosomes = dropSeqlevels(q1_std_chr, c("chrX", "chrY", "chrM"), pruning.mode="coarse")
+
+q1_autosomes
+
+#verify you only have autosomes
+seqlevels(q1_autosomes)
+q1_autosomes
+
+ranges(q1_autosomes)
+length(q1_autosomes) # this gives you the answer
+26641
+```
+
+## Q2
+
+Question: How many CpG Islands exists on chromosome 4.
+
+1 point
+
+1163
+
+1688
+
+1031
+
+801
+
+```{r}
+# using standard chromosome ranes from q1
+q1_std_chr
+q2_chr4 = keepSeqlevels(q1_std_chr, "chr4", pruning.mode = "coarse")
+
+q2_chr4
+
+# answer
+length(q2_chr4)
+ # 1031
+```
+
+## Q3
+
+3.  Question 3 Obtain the data for the H3K4me3 histone modification for the H1 cell line from Epigenomics Roadmap, using AnnotationHub. Subset these regions to only keep regions mapped to the autosomes (chromosomes 1 to 22).
+
+Question: How many bases does these regions cover?
+
+1 point
+
+37029137
+
+40252794
+
+37923727
+
+41135164
+
+```{r}
+ah = AnnotationHub()
+ah = subset(ah, species == "Homo sapiens")
+ah3 = query(ah, c("H3K4me3", "EpigenomeRoadMap", "E003"))
+
+ah3
+ah3$species
+mcols(ah3)$genome
+
+ah3[1]
+ah3[2]
+
+gr1 = ah3[[1]]
+gr2 = ah3[[2]]
+
+summary(width(gr1))
+summary(width(gr2))
+# it seems like there is more dispersion in gr2
+# dispersion is almost alike form minimum to medium/mean
+# after mean gr1 is more dispersed and gr2 is less
+# but this is still my guess, as I see the summary, I didnt run any # statistical tests
+
+# choosing less dispersed gr2
+seqlevels(gr2)
+ah3_std = keepStandardChromosomes(gr2, pruning.mode = "coarse")
+seqlevels(ah3_std)
+ah3_auto = dropSeqlevels(ah3_std, c("chrX", "chrY", "chrM"), pruning.mode = "coarse")
+seqlevels(ah3_auto)
+
+seqlengths(ah3_auto)
+
+# following two statements give same and they answer to the question
+sum(width(reduce(ah3_auto)))
+sum(width(ah3_auto))
+
+# 41135164
+```
+
+## Q4
+
+Question 4
+
+Obtain the data for the H3K27me3 histone modification for the H1 cell line from Epigenomics Roadmap, using the AnnotationHub package. Subset these regions to only keep regions mapped to the autosomes. In the return data, each region has an associated "signalValue".
+
+**Question:** What is the mean signalValue across all regions on the standard chromosomes?
+
+1 point
+
+**4.770728**
+
+**4.799766**
+
+**4.372933**
+
+**5.140497**
+
+```{r}
+ah = AnnotationHub()
+ah = subset(ah, species == "Homo sapiens")
+ah4 = query(ah, c("H3K27me3", "EpigenomeRoadMap", "E003"))
+
+ah4
+ah4$species
+mcols(ah4)$genome
+
+ah4[1]
+ah4[2]
+
+gr1 = ah4[[1]]
+gr2 = ah4[[2]]
+
+summary(width(gr1))
+summary(width(gr2))
+
+qqnorm(width(gr1))
+qqnorm(width(gr2))
+
+# answers
+mean(gr1$signalValue)
+mean(gr2$signalValue)
+
+# for use in next question
+seqlevels(gr2)
+ah4_std = keepStandardChromosomes(gr2, pruning.mode = "coarse")
+seqlevels(ah4_std)
+ah4_auto = dropSeqlevels(ah4_std, c("chrX", "chrY", "chrM"), pruning.mode = "coarse")
+seqlevels(ah4_auto)
+
+seqlengths(ah4_auto)
+# 4.771152
+```
+
+## Q5.
+
+Question 5
+
+Bivalent regions are bound by both H3K4me3 and H3K27me3.
+
+**Question:** Using the regions we have obtained above, how many bases on the standard chromosomes are bivalently marked?
+
+1 point
+
+**10207246**
+
+**10289096**
+
+**10984729**
+
+**9926503**
+
+```{r}
+ah3_auto
+ah4_auto
+seqlevels(ah4_auto) == seqlevels(ah3_auto)
+
+bivalent = intersect(ah3_auto, ah4_auto)
+bivalent
+
+sum(width(reduce(bivalent)))
+# answer is 10289096
+```
+
+## Q6.
+
+We will examine the extent to which bivalent regions overlap CpG Islands.
+
+**Question:** how big a fraction (expressed as a number between 0 and 1) of the bivalent regions, overlap one or more CpG Islands?
+
+1 point
+
+**0.5140894**
+
+**0.5839835**
+
+**0.5383644**
+
+**0.5059474**
+
+```{r}
+q1_autosomes
+q1_datum
+q1_std_chr
+bivalent
+ov6 = findOverlaps(bivalent, q1_autosomes)
+ov6
+
+ov6.1 = intersect(bivalent, q1_autosomes)
+ov6.1
+reduce(ov6.1)
+
+
+length(unique(queryHits(ov6)))
+length(queryHits(ov6))
+
+sum(width(reduce(q1_autosomes)))
+
+length(queryHits(ov6)) / length(q1_autosomes)
+# 0.4482564
+
+length(bivalent) # this is denominationator - how BIG PART
+findOverlaps(bivalent, q1_autosomes)
+findOverlaps(bivalent, q1_datum)
+findOverlaps(bivalent, q1_std_chr)
+
+length(findOverlaps(bivalent, q1_std_chr))
+length(q1_std_chr)
+sum(unique(queryHits(findOverlaps(bivalent, q1_std_chr))))
+#intersect(bivalent, q1_autosomes)
+
+
+length(findOverlaps(bivalent, q1_std_chr)) / length(bivalent)
+length(findOverlaps(bivalent, q1_datum)) / length(bivalent)
+length(findOverlaps(bivalent, q1_autosomes)) / length(bivalent)
+
+```
+
+## Q7.
+
+```{r}
+#Q7
+# denominator is bases which are part of CpG Islands
+# How big a fraction (expressed as a number between 0 and 1) of the bases which are part of CpG Islands, are also bivalent marked
+
+seqlengths(q1_datum) 
+sum(seqlengths(q1_autosomes))
+length(bivalent)
+length(q1_autosomes)
+findOverlaps()
+sum(width(q1_autosomes))
+
+sum(width(intersect(bivalent, q1_autosomes)))
+
+sum(width(intersect(bivalent, q1_autosomes))) / sum(width(q1_autosomes))
+```
+
+## Q8. 
+
+```{r}
+# How many bases are bivalently marked within 10kb of CpG Islands?
+ 
+# get - 10kb of CpG Islands
+q1_autosomes
+
+cpg_rs = resize(q1_autosomes, width = 10000, fix="center", use.names=TRUE, ignore.strand=FALSE)
+cpg_rs
+
+marked = intersect(bivalent, cpg_rs)
+sum(width(marked))
+
+
+# testing if a better solution occurs
+cpg.rs.1 = resize(q1_std_chr, width = (20000 + width(q1_std_chr)), fix="center", ignore.strand=TRUE)
+
+marked = intersect(bivalent, cpg.rs.1)
+sum(width(marked))
+
+ah# NO BETTER SOLUTION FOUND
+# 9667117 CHOOSE NEAREST OPTION
+```
+
+## Q9. 
+
+```{r}
+genome = q1_std_chr
+seqlengths(q1_autosomes)
+seqlengths(q1_datum)
+seqlengths(q1_std_chr)
+
+sum(seqlengths(q1_datum))
+sum(seqlengths(q1_std_chr))
+sum(seqlengths(q1_autosomes))
+
+genome.size = sum(as.numeric(seqlengths(q1_autosomes)))
+genome.size
+
+```
