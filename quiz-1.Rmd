@@ -11,15 +11,33 @@ output: html_document
 
 # Quiz 1
 
-Useful links before we start:
+Useful links for initial questions before we start:
 
 -   [https://www.coursera.org/learn/bioconductor/discussions/forums/ux-4Iij3Eea8jw6UvTi2Tw/threads/YLZyg9f_EeW17wrgkMLDIQhttps://www.coursera.org/learn/bioconductor/discussions/forums/ux-4Iij3Eea8jw6UvTi2Tw/threads/YLZyg9f_EeW17wrgkMLDIQ](https://www.coursera.org/learn/bioconductor/discussions/forums/ux-4Iij3Eea8jw6UvTi2Tw/threads/YLZyg9f_EeW17wrgkMLDIQ){.uri}
 
 -   [Bioconductor for Genomic Data Science - Discussions \| Coursera](https://www.coursera.org/learn/bioconductor/discussions/forums/ux-4Iij3Eea8jw6UvTi2Tw/threads/JW10d3MTRd6tdHdzE_Xe0Q)
 
-## Q1
-
 session direcory
+
+```{r}
+setwd("D:/CB/biocond/coursera-gds-bc")
+```
+
+## Q1.
+
+Use the AnnotationHub package to obtain data on "CpG Islands" in the human genome.
+
+**Question:** How many islands exists on the autosomes?
+
+1 point
+
+**26641**
+
+**25557**
+
+**22215**
+
+**13810**
 
 ```{r}
 # BiocManager::version()
@@ -63,10 +81,10 @@ q1_autosomes
 
 ranges(q1_autosomes)
 length(q1_autosomes) # this gives you the answer
-26641
+#26641
 ```
 
-## Q2
+## Q2.
 
 Question: How many CpG Islands exists on chromosome 4.
 
@@ -89,10 +107,12 @@ q2_chr4
 
 # answer
 length(q2_chr4)
- # 1031
+# 1031
 ```
 
-## Q3
+## Q3.
+
+#### Hint: Since choosing the right dataset is sifficult due to unclear instructions. Must see the first two links at top to know what we are going to search.
 
 3.  Question 3 Obtain the data for the H3K4me3 histone modification for the H1 cell line from Epigenomics Roadmap, using AnnotationHub. Subset these regions to only keep regions mapped to the autosomes (chromosomes 1 to 22).
 
@@ -146,7 +166,7 @@ sum(width(ah3_auto))
 # 41135164
 ```
 
-## Q4
+## Q4.
 
 Question 4
 
@@ -226,11 +246,14 @@ seqlevels(ah4_auto) == seqlevels(ah3_auto)
 bivalent = intersect(ah3_auto, ah4_auto)
 bivalent
 
+# bivalent = subsetByOverlaps(ah3_auto, ah4_auto)
+# bivalent
+
 sum(width(reduce(bivalent)))
 # answer is 10289096
 ```
 
-## Q6.
+## Q6-7.
 
 We will examine the extent to which bivalent regions overlap CpG Islands.
 
@@ -246,101 +269,129 @@ We will examine the extent to which bivalent regions overlap CpG Islands.
 
 **0.5059474**
 
+**Question:** How big a fraction (expressed as a number between 0 and 1) of the bases which are part of CpG Islands, are also bivalent marked
+
+1 point
+
+**0.241688**
+
+**0.2924248**
+
+**0.1860021**
+
+**0.2750512**
+
 ```{r}
 q1_autosomes
-q1_datum
-q1_std_chr
 bivalent
 ov6 = findOverlaps(bivalent, q1_autosomes)
 ov6
-
-ov6.1 = intersect(bivalent, q1_autosomes)
-ov6.1
-reduce(ov6.1)
-
-
 length(unique(queryHits(ov6)))
-length(queryHits(ov6))
 
-sum(width(reduce(q1_autosomes)))
+# Q6
+length(unique(queryHits(ov6))) / length(bivalent)
+# 0.5383644
 
-length(queryHits(ov6)) / length(q1_autosomes)
-# 0.4482564
-
-length(bivalent) # this is denominationator - how BIG PART
-findOverlaps(bivalent, q1_autosomes)
-findOverlaps(bivalent, q1_datum)
-findOverlaps(bivalent, q1_std_chr)
-
-length(findOverlaps(bivalent, q1_std_chr))
-length(q1_std_chr)
-sum(unique(queryHits(findOverlaps(bivalent, q1_std_chr))))
-#intersect(bivalent, q1_autosomes)
-
-
-length(findOverlaps(bivalent, q1_std_chr)) / length(bivalent)
-length(findOverlaps(bivalent, q1_datum)) / length(bivalent)
-length(findOverlaps(bivalent, q1_autosomes)) / length(bivalent)
-
+# Q7
+length(unique(subjectHits(ov6))) / length(q1_autosomes)
+# 0.2915806 Choose nearest answer
 ```
 
-## Q7.
+## Q8.
+
+**Question:** How many bases are bivalently marked within 10kb of CpG Islands?
+
+**Tip:** consider using the "resize()"" function.
+
+1 point
+
+**11928130**
+
+**11104114**
+
+**9782086**
+
+**7920203**
 
 ```{r}
-#Q7
-# denominator is bases which are part of CpG Islands
-# How big a fraction (expressed as a number between 0 and 1) of the bases which are part of CpG Islands, are also bivalent marked
-
-seqlengths(q1_datum) 
-sum(seqlengths(q1_autosomes))
-length(bivalent)
-length(q1_autosomes)
-findOverlaps()
-sum(width(q1_autosomes))
-
-sum(width(intersect(bivalent, q1_autosomes)))
-
-sum(width(intersect(bivalent, q1_autosomes))) / sum(width(q1_autosomes))
-```
-
-## Q8. 
-
-```{r}
-# How many bases are bivalently marked within 10kb of CpG Islands?
- 
-# get - 10kb of CpG Islands
+# resize q1_autosomes
 q1_autosomes
-
-cpg_rs = resize(q1_autosomes, width = 10000, fix="center", use.names=TRUE, ignore.strand=FALSE)
-cpg_rs
-
-marked = intersect(bivalent, cpg_rs)
-sum(width(marked))
-
-
-# testing if a better solution occurs
-cpg.rs.1 = resize(q1_std_chr, width = (20000 + width(q1_std_chr)), fix="center", ignore.strand=TRUE)
-
-marked = intersect(bivalent, cpg.rs.1)
-sum(width(marked))
-
-ah# NO BETTER SOLUTION FOUND
-# 9667117 CHOOSE NEAREST OPTION
+big_islands <- resize(q1_autosomes, width = (20000 + width(q1_autosomes)), fix = "center")
+x = intersect(bivalent, big_islands)
+x
+sum(width(reduce(x)))
+# 9782086
 ```
 
-## Q9. 
+## Q9.
+
+Question 9
+
+**Question:** How big a fraction (expressed as a number between 0 and 1) of the human genome is contained in a CpG Island?
+
+**Tip 1:** the object returned by AnnotationHub contains "seqlengths".
+
+**Tip 2:** you may encounter an integer overflow. As described in the session on R Basic Types, you can address this by converting integers to numeric before summing them, "as.numeric()".
+
+1 point
+
+**0.006823921**
+
+**0.007288502**
+
+**0.005769540**
+
+**0.007047481**
 
 ```{r}
-genome = q1_std_chr
-seqlengths(q1_autosomes)
-seqlengths(q1_datum)
-seqlengths(q1_std_chr)
+# denominator is the length of human genome
+genome = q1_autosomes
+seqlengths(genome)
+as.numeric(seqlengths(genome))
 
-sum(seqlengths(q1_datum))
-sum(seqlengths(q1_std_chr))
-sum(seqlengths(q1_autosomes))
+genome.length = sum(as.numeric(seqlengths(genome)))
+genome.length
 
-genome.size = sum(as.numeric(seqlengths(q1_autosomes)))
-genome.size
+sum(as.numeric(width(q1_autosomes)))
 
+sum(as.numeric(width(q1_autosomes))) / genome.length
+# 0.007047481 is the answer
+```
+
+## Q10.
+
+Question 10
+
+**Question:** Compute an odds-ratio for the overlap of bivalent marks with CpG islands.
+
+1 point
+
+**193.1999**
+
+**168.2223**
+
+**169.0962**
+
+**211.6532**
+
+```{r}
+inOut = matrix(0, ncol = 2, nrow = 2)
+colnames(inOut) = c("in", "out")
+rownames(inOut) = c("in", "out")
+
+#inOut
+
+inOut[1,1] = sum(width(intersect(
+  bivalent, q1_autosomes, ignore.strand=TRUE)))
+inOut[1,2] = sum(width(setdiff(
+  bivalent, q1_autosomes, ignore.strand=TRUE)))
+inOut[2,1] = sum(width(setdiff(
+  q1_autosomes, bivalent, ignore.strand=TRUE)))
+inOut[2,2] = genome.length - sum(inOut)
+
+inOut
+
+odd_ratio <- inOut[1,1]*inOut[2,2]/(inOut[1,2]*inOut[2,1])
+
+odd_ratio
 ```
